@@ -165,7 +165,7 @@ export default function Chatbot() {
                         : "translate-y-12 opacity-0 scale-90 pointer-events-none"
                 )}
             >
-                <Card className="w-[calc(100vw-3rem)] sm:w-[500px] h-[700px] max-h-[calc(100vh-4rem)] flex flex-col shadow-2xl border-primary/10 overflow-hidden bg-background/95 backdrop-blur-xl rounded-3xl">
+                <Card className="w-[calc(100vw-3rem)] pt-0 sm:w-[500px] h-[700px] max-h-[calc(100vh-4rem)] flex flex-col shadow-2xl border-primary/10 overflow-hidden bg-background/95 backdrop-blur-xl rounded-3xl">
                     <CardHeader className="border-b bg-primary/5 px-6 py-4 flex flex-row items-center justify-between space-y-0">
                         <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10 border-2 border-primary/20 shadow-sm">
@@ -201,7 +201,8 @@ export default function Chatbot() {
                                     <div
                                         key={message.id}
                                         className={cn(
-                                            "flex items-start gap-3 max-w-[85%]",
+                                            "flex items-start gap-3 w-full",
+                                            message.agent ? "max-w-full" : "max-w-[85%]",
                                             message.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto text-left"
                                         )}
                                     >
@@ -219,6 +220,7 @@ export default function Chatbot() {
 
                                         <div className={cn(
                                             "flex flex-col gap-1",
+                                            message.agent ? "w-full" : "",
                                             message.role === "user" ? "items-end" : "items-start"
                                         )}>
                                             <div
@@ -232,7 +234,7 @@ export default function Chatbot() {
                                                 {message.content}
                                             </div>
                                             {message.products && message.products.length > 0 && (
-                                                <div className="mt-2 flex flex-row gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory lg:-mx-2 px-2 -mx-4 w-[calc(100%+2rem)] lg:w-full animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                                <div className="mt-2 flex flex-row gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory px-4 -mx-4 w-[calc(100%+2rem)] animate-in fade-in slide-in-from-bottom-2 duration-500">
                                                     {message.products.map((p, idx) => (
                                                         <div key={idx} className="shrink-0 snap-center first:pl-2 last:pr-2">
                                                             <ProductCard {...p} />
@@ -241,7 +243,7 @@ export default function Chatbot() {
                                                 </div>
                                             )}
                                             {message.agent && (
-                                                <div className="mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                                <div className="mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500 w-full">
                                                     <AgentCard agent={message.agent} />
                                                 </div>
                                             )}

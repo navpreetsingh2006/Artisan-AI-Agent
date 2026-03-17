@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Package, Ruler, Tag, Info, Sparkles } from "lucide-react"
 import { fetchProductFromAPI } from "@/lib/products"
 
 interface ProductProps {
@@ -57,10 +58,14 @@ export function ProductCard({ name: initialName, size: initialSize, price: initi
 
     if (loading) {
         return (
-            <div className="w-full max-w-[240px] animate-pulse">
-                <Card className="rounded-[1.5rem] border-2 border-primary/5 bg-muted/20 h-[100px] flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-2">
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-primary/40">Loading...</span>
+            <div className="w-full max-w-[260px] aspect-square animate-pulse">
+                <Card className="aspect-square w-full rounded-lg border border-border bg-muted/40 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="relative">
+                            <div className="h-10 w-10 rounded-full border-2 border-primary/20" />
+                            <div className="absolute inset-0 h-10 w-10 rounded-full border-t-2 border-primary animate-spin" />
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground/60 tracking-wider uppercase">Fetching Details...</span>
                     </div>
                 </Card>
             </div>
@@ -69,11 +74,16 @@ export function ProductCard({ name: initialName, size: initialSize, price: initi
 
     if (error && !name) {
         return (
-            <div className="w-full max-w-[240px]">
-                <Card className="rounded-[1.5rem] border-2 border-destructive/20 bg-destructive/5 p-3 shadow-sm">
-                    <div className="flex flex-col items-center gap-1.5 text-center">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-destructive/70">Not Found</p>
-                        <p className="text-[9px] text-muted-foreground/80 leading-tight line-clamp-1">{query}</p>
+            <div className="w-full max-w-[260px] aspect-square">
+                <Card className="aspect-square w-full rounded-lg border border-border/50 bg-background p-6 flex items-center justify-center shadow-sm">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                        <div className="p-3 rounded-full bg-muted/50">
+                            <Package size={24} className="text-muted-foreground/40" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <p className="text-sm font-semibold text-muted-foreground">Product not found</p>
+                            <p className="text-xs text-muted-foreground/50 line-clamp-2 max-w-[160px]">"{query}" wasn't found in our collection.</p>
+                        </div>
                     </div>
                 </Card>
             </div>
@@ -83,41 +93,49 @@ export function ProductCard({ name: initialName, size: initialSize, price: initi
     return (
         <Tooltip>
             <TooltipTrigger>
-                <div className="w-full max-w-[240px] animate-in fade-in zoom-in-95 duration-500">
-                    <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-[0_15px_30px_-10px_rgba(var(--primary-rgb),0.15)] hover:scale-[1.02] border-primary/10 bg-gradient-to-br from-background via-background to-primary/5 group cursor-help rounded-[1.5rem] border-2">
-                        {/* 🌟 Premium Accents */}
-                        <div className="absolute -top-6 -right-6 w-20 h-20 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors duration-700" />
-
-                        <CardContent className="p-3.5 flex flex-col gap-2.5 relative z-10">
-                            {/* Header: Name */}
-                            <div className="flex flex-col gap-0.5">
-                                <h3 className="font-extrabold text-[14px] tracking-tight group-hover:text-primary transition-colors leading-tight truncate">
-                                    {name || "Loading..."}
+                <div className="w-full min-w-[180px] max-w-[180px] aspect-square animate-in fade-in duration-300">
+                    <Card className="aspect-square w-full relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/30 border border-border bg-background group cursor-help rounded-lg">
+                        <CardContent className="p-6 flex flex-col h-full justify-between relative z-10">
+                            {/* Product Name */}
+                            <div className="flex flex-col gap-1">
+                                <h3 className="font-semibold text-base text-foreground leading-snug truncate group-hover:text-primary transition-colors">
+                                    {name || "Premium Item"}
                                 </h3>
-                                <span className="text-[8px] uppercase font-bold tracking-tighter text-muted-foreground/40">Artisan Collection</span>
                             </div>
 
-                            {/* Info Grid */}
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="flex flex-col gap-0.5 p-2 rounded-[1rem] bg-background/60 backdrop-blur-md border border-primary/5 group-hover:border-primary/20 transition-all duration-300">
-                                    <span className="text-[7px] text-muted-foreground uppercase tracking-[0.1em] font-black opacity-50">Size</span>
-                                    <div className="text-[10px] font-bold truncate">
-                                        {size || "Custom"}
+                            {/* Information Grid */}
+                            <div className="flex flex-col gap-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-xs font-medium text-muted-foreground/60 mb-1 text-left">Size</p>
+                                        <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                                            <Ruler size={13} className="text-muted-foreground/40" />
+                                            {size || "Custom"}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs font-medium text-muted-foreground/60 mb-1">Price</p>
+                                        <div className="flex items-center gap-1.5 text-sm font-bold text-primary justify-end">
+                                            <Tag size={13} />
+                                            {price ? (price.toString().startsWith('$') ? price : `$${price}`) : "TBD"}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex flex-col gap-0.5 p-2 rounded-[1rem] bg-primary/5 backdrop-blur-md border border-primary/10 group-hover:border-primary/30 transition-all duration-300 shadow-sm">
-                                    <span className="text-[7px] text-primary/70 uppercase tracking-[0.1em] font-black">Price</span>
-                                    <div className="text-[10px] font-black text-primary">
-                                        {price ? (price.toString().startsWith('$') ? price : `$${price}`) : "TBD"}
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Hover Indicator */}
-                            <div className="flex items-center justify-center py-0.5 rounded-full bg-muted/20 group-hover:bg-primary/5 transition-colors">
-                                <span className="text-[7px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em]">Details</span>
+                                {/* Divider */}
+                                <div className="h-px bg-border/50" />
+
+                                {/* Interactive Indicator */}
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
+                                    <p className="text-xs text-muted-foreground/50 text-center group-hover:text-muted-foreground transition-colors">
+                                        Hover for details
+                                    </p>
+                                </div>
                             </div>
                         </CardContent>
+                        {/* Subtle background accent */}
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors duration-700" />
                     </Card>
                 </div>
             </TooltipTrigger>
@@ -125,12 +143,17 @@ export function ProductCard({ name: initialName, size: initialSize, price: initi
                 side="top"
                 align="center"
                 sideOffset={8}
-                className="max-w-[200px] p-3.5 bg-background/98 backdrop-blur-xl border-2 border-primary/20 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] rounded-[1.25rem] animate-in slide-in-from-bottom-2"
+                className="max-w-sm p-4 bg-background border border-border shadow-lg rounded-lg animate-in fade-in slide-in-from-bottom-2 duration-200"
             >
-                <div className="flex flex-col gap-1.5">
-                    <span className="text-[9px] font-black text-primary uppercase tracking-widest italic border-b border-primary/10 pb-1.5">Note</span>
-                    <p className="text-[10px] leading-relaxed text-muted-foreground/90 font-medium line-clamp-4">
-                        {description || "A masterfully crafted piece designed to elevate your space."}
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="p-1 rounded bg-primary/10">
+                            <Info size={14} className="text-primary" />
+                        </div>
+                        <p className="text-xs font-bold text-foreground uppercase tracking-wider">Product Info</p>
+                    </div>
+                    <p className="text-sm leading-relaxed text-muted-foreground line-clamp-4">
+                        {description || "A masterfully crafted piece from the Artisan collection, designed with meticulous attention to detail."}
                     </p>
                 </div>
             </TooltipContent>
