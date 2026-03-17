@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils"
 import { sendChatMessage } from "@/lib/call"
 import { ProductCard } from "@/components/ProductCard"
 import { searchLocalProducts, type Product } from "@/lib/products"
+import { OrderCard } from "@/components/OrderCard"
+import { type Order } from "@/lib/orders"
 
 
 // Message structure
@@ -25,6 +27,7 @@ interface Message {
         price: string | number
         description: string
     }
+    order?: Order
 }
 
 export default function Chatbot() {
@@ -69,28 +72,37 @@ export default function Chatbot() {
 
             if (!response.ok) throw new Error("Failed to get response")
 
-            const data = await response.json()
+            const text = await response.text()
+            let data: any = null
+            let botText = "I'm sorry, I couldn't find any information on that. Can I help with something else?"
 
-            // 👉 Response parsing logic now in component
-            let botText = "I received your message but couldn't process a response."
+            if (text && text.trim() !== "") {
+                try {
+                    data = JSON.parse(text)
 
-            if (typeof data === 'string') {
-                botText = data
-            } else if (Array.isArray(data) && data[0]?.output) {
-                botText = data[0].output
-            } else if (data.draft_reply) {
-                botText = data.draft_reply
-            } else if (data.output) {
-                botText = data.output
-            } else if (data.response) {
-                botText = data.response
-            } else if (data.message) {
-                botText = data.message
+                    // 👉 Response parsing logic now in component
+                    if (typeof data === 'string') {
+                        botText = data
+                    } else if (Array.isArray(data) && data[0]?.output) {
+                        botText = data[0].output
+                    } else if (data.draft_reply) {
+                        botText = data.draft_reply
+                    } else if (data.output) {
+                        botText = data.output
+                    } else if (data.response) {
+                        botText = data.response
+                    } else if (data.message) {
+                        botText = data.message
+                    }
+                } catch (e) {
+                    console.error("Error parsing API response:", e)
+                    // Keep fallback botText
+                }
             }
 
             // 👉 Pass the identified product name or query to ProductCard
             let productData: any = undefined
-            const rawApiProduct = data.product || data.details?.product || (Array.isArray(data) && data[0]?.product) || data.metadata?.product
+            const rawApiProduct = data ? (data.product || data.details?.product || (Array.isArray(data) && data[0]?.product) || data.metadata?.product) : null
 
             if (rawApiProduct) {
                 productData = {
@@ -107,12 +119,25 @@ export default function Chatbot() {
                 }
             }
 
+            // 👉 Parsing Order Data
+            let orderData: any = undefined
+            const rawApiOrder = data.order || data.details?.order || (Array.isArray(data) && data[0]?.order)
+            
+            if (rawApiOrder) {
+                orderData = {
+                    orderNumber: rawApiOrder.order_number || rawApiOrder.id,
+                    orderDate: rawApiOrder.date || rawApiOrder.created_at,
+                    paymentStatus: rawApiOrder.payment_status || rawApiOrder.status
+                }
+            }
+
             const botMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "bot",
                 content: botText,
                 timestamp: new Date(),
-                product: productData
+                product: productData,
+                order: orderData
             }
             setMessages((prev) => [...prev, botMessage])
         } catch (error) {
@@ -208,6 +233,11 @@ export default function Chatbot() {
                                             {message.product && (
                                                 <div className="mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
                                                     <ProductCard {...message.product} />
+                                                </div>
+                                            )}
+                                            {message.order && (
+                                                <div className="mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500 flex flex-wrap gap-2">
+                                                    <OrderCard {...message.order} />
                                                 </div>
                                             )}
                                             <span className="text-[10px] text-muted-foreground opacity-50 px-1">
