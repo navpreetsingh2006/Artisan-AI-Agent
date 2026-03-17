@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { sendChatMessage } from "@/lib/call"
 import { ProductCard } from "@/components/ProductCard"
+import { AgentCard } from "@/components/agentCard"
 import { searchLocalProducts, type Product } from "@/lib/products"
 import { OrderCard } from "@/components/OrderCard"
 import { type Order } from "@/lib/orders"
@@ -21,11 +22,34 @@ interface Message {
     role: "user" | "bot"
     content: string
     timestamp: Date
-    product?: {
-        name: string
-        size: string
-        price: string | number
-        description: string
+    products?: {
+        name?: string
+        size?: string
+        price?: string | number
+        description?: string
+        query?: string
+    }[]
+    agent?: {
+        identity: {
+            agent_id: string | null
+            agent_name: string | null
+        }
+        classification: {
+            category: string | null
+            subcategory: string | null
+            detected_intent: string
+        }
+        priority: {
+            priority_score: number
+            priority_label: string
+            recommended_priority: string
+        }
+        analysis: {
+            confidence_score: number
+            customer_status: string
+            angry_alert: boolean
+            urgency_keywords_found: string[]
+        }
     }
     order?: Order
 }
@@ -104,13 +128,14 @@ export default function Chatbot() {
             let productData: any = undefined
             const rawApiProduct = data ? (data.product || data.details?.product || (Array.isArray(data) && data[0]?.product) || data.metadata?.product) : null
 
-            if (rawApiProduct) {
-                productData = {
-                    name: rawApiProduct.name || rawApiProduct.title,
-                    size: rawApiProduct.size || rawApiProduct.dimensions,
-                    price: rawApiProduct.payableamount || rawApiProduct.price,
-                    description: rawApiProduct.description || rawApiProduct.info
-                }
+            if (rawProductSource) {
+                const rawProducts = Array.isArray(rawProductSource) ? rawProductSource : [rawProductSource]
+                productsData = rawProducts.map((item: any) => ({
+                    name: item.name || item.title,
+                    size: item.PaintingSize || item.size || item.dimensions,
+                    price: item.payableAmount || item.payableamount || item.price,
+                    description: item.description || item.info || item.details
+                }))
             } else {
                 // Try to extract from keywords if no explicit product object
                 const localMatch = searchLocalProducts(currentInput)
@@ -122,7 +147,7 @@ export default function Chatbot() {
             // 👉 Parsing Order Data
             let orderData: any = undefined
             const rawApiOrder = data.order || data.details?.order || (Array.isArray(data) && data[0]?.order)
-            
+
             if (rawApiOrder) {
                 orderData = {
                     orderNumber: rawApiOrder.order_number || rawApiOrder.id,
@@ -136,8 +161,8 @@ export default function Chatbot() {
                 role: "bot",
                 content: botText,
                 timestamp: new Date(),
-                product: productData,
-                order: orderData
+                products: productsData.length > 0 ? productsData : undefined,
+                agent: data.agent || undefined
             }
             setMessages((prev) => [...prev, botMessage])
         } catch (error) {
@@ -164,7 +189,7 @@ export default function Chatbot() {
                         : "translate-y-12 opacity-0 scale-90 pointer-events-none"
                 )}
             >
-                <Card className="w-[calc(100vw-3rem)] sm:w-[420px] h-[600px] max-h-[calc(100vh-8rem)] flex flex-col shadow-2xl border-primary/10 overflow-hidden bg-background/95 backdrop-blur-xl rounded-3xl">
+                <Card className="w-[calc(100vw-3rem)] sm:w-[500px] h-[700px] max-h-[calc(100vh-4rem)] flex flex-col shadow-2xl border-primary/10 overflow-hidden bg-background/95 backdrop-blur-xl rounded-3xl">
                     <CardHeader className="border-b bg-primary/5 px-6 py-4 flex flex-row items-center justify-between space-y-0">
                         <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10 border-2 border-primary/20 shadow-sm">
@@ -230,7 +255,16 @@ export default function Chatbot() {
                                             >
                                                 {message.content}
                                             </div>
-                                            {message.product && (
+                                            {message.products && message.products.length > 0 && (
+                                                <div className="mt-2 flex flex-row gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory lg:-mx-2 px-2 -mx-4 w-[calc(100%+2rem)] lg:w-full animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                                    {message.products.map((p, idx) => (
+                                                        <div key={idx} className="shrink-0 snap-center first:pl-2 last:pr-2">
+                                                            <ProductCard {...p} />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {message.agent && (
                                                 <div className="mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
                                                     <ProductCard {...message.product} />
                                                 </div>
