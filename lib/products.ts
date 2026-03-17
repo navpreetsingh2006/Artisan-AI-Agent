@@ -38,20 +38,22 @@ export const products: Product[] = [
     }
 ]
 
+
 /**
  * Searches the local catalog for a product matching the query
  */
 export function searchLocalProducts(query: string): Product | null {
-    const searchTerms = query.toLowerCase().split(/\W+/)
-    return products.find(p => 
-        searchTerms.some(term => 
-            term.length > 2 && (
-                p.name.toLowerCase().includes(term) || 
-                p.description.toLowerCase().includes(term)
-            )
+    const searchTerms = query.toLowerCase().split(/\W+/).filter(t => t.length > 3)
+    if (searchTerms.length === 0) return null
+
+    return products.find(p => {
+        const nameWords = p.name.toLowerCase().split(/\W+/)
+        return searchTerms.some(term => 
+            nameWords.some(word => word === term || (word.length > 5 && word.includes(term)))
         )
-    ) || null
+    }) || null
 }
+
 
 /**
  * Fetches product details from the API based on a query
@@ -72,10 +74,10 @@ export async function fetchProductFromAPI(query: string): Promise<Product | null
         if (!response.ok) return null
 
         const data = await response.json()
-        
+
         // Extract product from various known formats and map fields correctly
         const rawProduct = data.product || data.details?.product || (Array.isArray(data) && data[0]?.product)
-        
+
         if (rawProduct) {
             return {
                 name: rawProduct.name || rawProduct.title || "Artisan Product",
@@ -84,7 +86,7 @@ export async function fetchProductFromAPI(query: string): Promise<Product | null
                 description: rawProduct.description || rawProduct.info || "No description available."
             }
         }
-        
+
         return null
     } catch (error) {
         console.error("Error fetching product from API:", error)
@@ -103,3 +105,6 @@ export async function getProduct(query: string): Promise<Product | null> {
     // 2. Fallback to API for more details or unknown products
     return await fetchProductFromAPI(query)
 }
+
+
+

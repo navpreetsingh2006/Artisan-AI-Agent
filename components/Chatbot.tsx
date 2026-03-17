@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { sendChatMessage } from "@/lib/call"
 import { ProductCard } from "@/components/ProductCard"
-import { products, type Product } from "@/lib/products"
+import { searchLocalProducts, type Product } from "@/lib/products"
 
 
 // Message structure
@@ -88,36 +88,31 @@ export default function Chatbot() {
                 botText = data.message
             }
 
-            // 👉 Robust product extraction from API data with field mapping
-            let apiProduct: Message['product'] = undefined
+            // 👉 Pass the identified product name or query to ProductCard
+            let productData: any = undefined
             const rawApiProduct = data.product || data.details?.product || (Array.isArray(data) && data[0]?.product) || data.metadata?.product
 
             if (rawApiProduct) {
-                apiProduct = {
-                    name: rawApiProduct.name || rawApiProduct.title || "Product",
-                    size: rawApiProduct.size || rawApiProduct.dimensions || "N/A",
-                    price: rawApiProduct.payableamount || rawApiProduct.price || "N/A",
-                    description: rawApiProduct.description || rawApiProduct.details || ""
+                productData = {
+                    name: rawApiProduct.name || rawApiProduct.title,
+                    size: rawApiProduct.size || rawApiProduct.dimensions,
+                    price: rawApiProduct.payableamount || rawApiProduct.price,
+                    description: rawApiProduct.description || rawApiProduct.info
+                }
+            } else {
+                // Try to extract from keywords if no explicit product object
+                const localMatch = searchLocalProducts(currentInput)
+                if (localMatch) {
+                    productData = localMatch
                 }
             }
-
-            // 👉 Search for products in the local catalog (fallback)
-            const searchTerms = currentInput.toLowerCase().split(/\W+/)
-            const matchedProduct = products.find(p =>
-                searchTerms.some(term =>
-                    term.length > 2 && (
-                        p.name.toLowerCase().includes(term) ||
-                        p.description.toLowerCase().includes(term)
-                    )
-                )
-            )
 
             const botMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "bot",
                 content: botText,
                 timestamp: new Date(),
-                product: apiProduct || (matchedProduct ? { ...matchedProduct } : undefined)
+                product: productData
             }
             setMessages((prev) => [...prev, botMessage])
         } catch (error) {
