@@ -4,97 +4,31 @@ import React, { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Package, Ruler, Tag, Info, Sparkles } from "lucide-react"
-import { fetchProductFromAPI } from "@/lib/products"
 
-interface ProductProps {
-    name?: string
-    size?: string
-    price?: string | number
-    description?: string
-    query?: string
+export interface Product {
+    _id: string
+    name: string
+    size: string
+    price: string | number
+    description: string
 }
 
-export function ProductCard({ name: initialName, size: initialSize, price: initialPrice, description: initialDescription, query }: ProductProps) {
-    const [data, setData] = useState({
-        name: initialName,
-        size: initialSize,
-        price: initialPrice,
-        description: initialDescription
-    })
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(false)
+interface ProductCardProps extends Product {
+    onSelect?: (product: Product) => void
+}
 
-    useEffect(() => {
-        // Only fetch if a query is provided and we don't have enough initial data
-        if (query && !initialName) {
-            const fetchData = async () => {
-                setLoading(true)
-                setError(false)
-                try {
-                    const product = await fetchProductFromAPI(query)
-                    if (product) {
-                        setData({
-                            name: product.name,
-                            size: product.size,
-                            price: product.price,
-                            description: product.description
-                        })
-                    } else {
-                        setError(true)
-                    }
-                } catch (err) {
-                    console.error("ProductCard Fetch Error:", err)
-                    setError(true)
-                } finally {
-                    setLoading(false)
-                }
-            }
-
-            fetchData()
-        }
-    }, [query, initialName])
-
-    const { name, size, price, description } = data
-
-    if (loading) {
-        return (
-            <div className="w-full max-w-[260px] aspect-square animate-pulse">
-                <Card className="aspect-square w-full rounded-lg border border-border bg-muted/40 flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-3">
-                        <div className="relative">
-                            <div className="h-10 w-10 rounded-full border-2 border-primary/20" />
-                            <div className="absolute inset-0 h-10 w-10 rounded-full border-t-2 border-primary animate-spin" />
-                        </div>
-                        <span className="text-xs font-medium text-muted-foreground/60 tracking-wider uppercase">Fetching Details...</span>
-                    </div>
-                </Card>
-            </div>
-        )
-    }
-
-    if (error && !name) {
-        return (
-            <div className="w-full max-w-[260px] aspect-square">
-                <Card className="aspect-square w-full rounded-lg border border-border/50 bg-background p-6 flex items-center justify-center shadow-sm">
-                    <div className="flex flex-col items-center gap-3 text-center">
-                        <div className="p-3 rounded-full bg-muted/50">
-                            <Package size={24} className="text-muted-foreground/40" />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <p className="text-sm font-semibold text-muted-foreground">Product not found</p>
-                            <p className="text-xs text-muted-foreground/50 line-clamp-2 max-w-[160px]">"{query}" wasn't found in our collection.</p>
-                        </div>
-                    </div>
-                </Card>
-            </div>
-        )
-    }
+export function ProductCard({ onSelect, ...product }: ProductCardProps) {
+    const { name, size, price, description } = product
 
     return (
         <Tooltip>
+            {/* TooltipTrigger expects a button or ref-forwarded component. Using child directly without asChild */}
             <TooltipTrigger>
                 <div className="w-full min-w-[180px] max-w-[180px] aspect-square animate-in fade-in duration-300">
-                    <Card className="aspect-square w-full relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/30 border border-border bg-background group cursor-help rounded-lg">
+                    <Card 
+                        onClick={() => onSelect?.(product)}
+                        className="aspect-square w-full relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/30 border border-border bg-background group cursor-pointer rounded-lg"
+                    >
                         <CardContent className="p-6 flex flex-col h-full justify-between relative z-10">
                             {/* Product Name */}
                             <div className="flex flex-col gap-1">
