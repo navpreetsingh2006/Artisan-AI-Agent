@@ -176,8 +176,14 @@ export default function Chatbot() {
                                     <ChatMessage 
                                         key={message.id} 
                                         message={message} 
-                                        onSelectProduct={setSelectedProduct} 
-                                        onSelectOrder={setSelectedOrder} 
+                                        onSelectProduct={(product) => {
+                                            setSelectedProduct(product)
+                                            setSelectedOrder(null)
+                                        }} 
+                                        onSelectOrder={(order) => {
+                                            setSelectedOrder(order)
+                                            setSelectedProduct(null)
+                                        }} 
                                     />
                                 ))}
                                 {isLoading && (
@@ -212,7 +218,7 @@ export default function Chatbot() {
 
                         {!isLoading && messages.length <= 2 && (
                             <div className="flex flex-wrap gap-2 w-full">
-                                {["Tell me more", "How can you help?", "Need support?"].map((suggestion) => (
+                                {["Tell me about your products", "What is the refund policy", "How can I track my order?"].map((suggestion) => (
                                     <button
                                         key={suggestion}
                                         onClick={() => setInput(suggestion)}
