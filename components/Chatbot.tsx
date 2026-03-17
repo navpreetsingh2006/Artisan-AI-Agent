@@ -9,6 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { sendChatMessage } from "@/lib/call"
+import { ProductCard } from "@/components/ProductCard"
+import { products, type Product } from "@/lib/products"
 
 
 // Message structure
@@ -17,6 +19,12 @@ interface Message {
     role: "user" | "bot"
     content: string
     timestamp: Date
+    product?: {
+        name: string
+        size: string
+        price: string | number
+        description: string
+    }
 }
 
 export default function Chatbot() {
@@ -68,6 +76,8 @@ export default function Chatbot() {
 
             if (typeof data === 'string') {
                 botText = data
+            } else if (Array.isArray(data) && data[0]?.output) {
+                botText = data[0].output
             } else if (data.draft_reply) {
                 botText = data.draft_reply
             } else if (data.output) {
@@ -76,15 +86,38 @@ export default function Chatbot() {
                 botText = data.response
             } else if (data.message) {
                 botText = data.message
-            } else if (Array.isArray(data) && data[0]?.output) {
-                botText = data[0].output
             }
+
+            // 👉 Robust product extraction from API data with field mapping
+            let apiProduct: Message['product'] = undefined
+            const rawApiProduct = data.product || data.details?.product || (Array.isArray(data) && data[0]?.product) || data.metadata?.product
+
+            if (rawApiProduct) {
+                apiProduct = {
+                    name: rawApiProduct.name || rawApiProduct.title || "Product",
+                    size: rawApiProduct.size || rawApiProduct.dimensions || "N/A",
+                    price: rawApiProduct.payableamount || rawApiProduct.price || "N/A",
+                    description: rawApiProduct.description || rawApiProduct.details || ""
+                }
+            }
+
+            // 👉 Search for products in the local catalog (fallback)
+            const searchTerms = currentInput.toLowerCase().split(/\W+/)
+            const matchedProduct = products.find(p =>
+                searchTerms.some(term =>
+                    term.length > 2 && (
+                        p.name.toLowerCase().includes(term) ||
+                        p.description.toLowerCase().includes(term)
+                    )
+                )
+            )
 
             const botMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "bot",
                 content: botText,
                 timestamp: new Date(),
+                product: apiProduct || (matchedProduct ? { ...matchedProduct } : undefined)
             }
             setMessages((prev) => [...prev, botMessage])
         } catch (error) {
@@ -177,6 +210,11 @@ export default function Chatbot() {
                                             >
                                                 {message.content}
                                             </div>
+                                            {message.product && (
+                                                <div className="mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                                    <ProductCard {...message.product} />
+                                                </div>
+                                            )}
                                             <span className="text-[10px] text-muted-foreground opacity-50 px-1">
                                                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
@@ -273,4 +311,5 @@ export default function Chatbot() {
             </Button>
         </div>
     )
+
 }
