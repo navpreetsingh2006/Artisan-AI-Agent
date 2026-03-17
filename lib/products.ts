@@ -73,7 +73,16 @@ export async function fetchProductFromAPI(query: string): Promise<Product | null
 
         if (!response.ok) return null
 
-        const data = await response.json()
+        const text = await response.text()
+        if (!text || text.trim() === "") return null
+
+        let data: any
+        try {
+            data = JSON.parse(text)
+        } catch (e) {
+            console.error("Error parsing product JSON:", e)
+            return null
+        }
 
         // Extract product from various known formats and map fields correctly
         const rawProduct = data.product || data.details?.product || (Array.isArray(data) && data[0]?.product)

@@ -22,8 +22,9 @@ async function test(query) {
 async function runTests() {
     await test("Show me the leather bag");
     await test("Artisan Leather Bag");
-    await test("Buy ceramic bowl");
-    await test("Order status");
+    await test("Ceramic Bowl");
+    await test("Woven Bamboo Basket");
+    await test("Pure Linen Scarf");
 }
 
 runTests();

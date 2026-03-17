@@ -6,7 +6,7 @@ async function testApi() {
         },
         body: JSON.stringify({
             message: "Hello",
-            user_id: "test_user",
+            user_id: "user",
         }),
     });
 
